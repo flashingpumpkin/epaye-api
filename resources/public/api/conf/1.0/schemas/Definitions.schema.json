@@ -7,13 +7,13 @@
       "example": "2017-05-05"
     },
     "taxYear": {
-      "type": "object",
       "description": "Tax year",
+      "type": "object",
       "title": "The tax year for this data",
       "properties": {
         "year": {
-          "type": "string",
           "description": "The tax year",
+          "type": "string",
           "pattern": "^\\d{4}-\\d{2}"
         },
         "firstDay": {
@@ -27,8 +27,8 @@
       }
     },
     "taxMonth": {
-      "type": "object",
       "description": "Tax month",
+      "type": "object",
       "title": "The tax month for this data",
       "properties": {
         "number": {
@@ -48,23 +48,26 @@
       }
     },
     "link": {
-      "type": "object",
       "description": "Link to a given endpoint.",
+      "type": "object",
       "properties": {
         "href": {
           "description": "Uri of the endpoint.",
           "type": "string"
         }
-      }
+      },
+      "required": [
+        "href"
+      ]
     },
     "empRef": {
-      "type": "string",
       "description": "A unique identifier made up of tax office number and tax office reference.",
+      "type": "string",
       "pattern": "^\\w{3}/\\w{7,10}"
     },
     "charge_code": {
-      "type": "string",
       "description": "The unique identifier for this charge",
+      "type": "string",
       "enum": [
         "NON_RTI_APPRENTICESHIP_LEVY_INTEREST",
         "NON_RTI_CIS_FIXED_PENALTY",
@@ -149,83 +152,14 @@
         "NON_RTI_TAX_INTEREST"
       ]
     },
-
     "dueDate": {
-      "$ref": "#/definitions/date",
-      "description": "The date this item is due"
+      "description": "The date this item is due",
+      "$ref": "#/definitions/date"
     },
     "is_overdue": {
-      "type": "boolean",
       "description": "Whether this item is overdue or not",
+      "type": "boolean",
       "default": false
-    },
-
-    "outstandingCharges": {
-      "type": "object",
-      "description": "The outstanding charges on account.",
-      "properties": {
-        "amount": {
-          "type": "number",
-          "description": "The outstanding charges on account."
-        },
-        "breakdown": {
-          "type": "object",
-          "description": "The breakdown of outstanding charges.",
-          "properties": {
-            "rti": {
-              "type": "number",
-              "description": "The outstanding RTI charges on account."
-            },
-            "nonRti": {
-              "type": "number",
-              "description": "The outstanding Non-RTI charges on account."
-            }
-          },
-          "required": [
-            "rti",
-            "nonRti"
-          ]
-        }
-      },
-      "required": [
-        "amount",
-        "breakdown"
-      ]
-    },
-
-    "epayeLinks": {
-      "type": "object",
-      "description": "An object of links to explore further data.",
-      "properties": {
-        "self": {
-          "description": "Link to the entry endpoint.",
-          "$ref": "#/definitions/link"
-        }
-      }
-    },
-    "empRefLinks": {
-      "type": "object",
-      "description": "An object of links to explore further data.",
-      "properties": {
-        "summary": {
-          "description": "Link to account summary endpoint.",
-          "$ref": "#/definitions/link"
-        }
-      }
-    },
-    "summaryLinks": {
-      "type": "object",
-      "description": "An object of links to explore further data.",
-      "properties": {
-        "self": {
-          "description": "Link to account summary endpoint.",
-          "$ref": "#/definitions/link"
-        },
-        "empRefs": {
-          "description": "Link to the entry endpoint endpoint.",
-          "$ref": "#/definitions/link"
-        }
-      }
     }
   }
 }
