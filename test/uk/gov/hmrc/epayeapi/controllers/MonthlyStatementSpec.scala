@@ -1,0 +1,145 @@
+/*
+ * Copyright 2017 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.gov.hmrc.epayeapi.controllers
+
+import org.mockito.Matchers
+import org.mockito.Matchers.anyObject
+import org.mockito.Mockito.{reset, when}
+import org.scalatest.BeforeAndAfterEach
+import play.api.Application
+import play.api.inject.bind
+import play.api.libs.json.Json
+import play.api.mvc.Result
+import play.api.test.FakeRequest
+import play.api.test.Helpers.{contentAsJson, status, _}
+import uk.gov.hmrc.auth.core.{ConfidenceLevel, Enrolment, EnrolmentIdentifier, InsufficientEnrolments}
+import uk.gov.hmrc.domain.EmpRef
+import uk.gov.hmrc.epayeapi.connectors.EpayeApiConfig
+import uk.gov.hmrc.epayeapi.models.{TaxMonth, TaxYear}
+import uk.gov.hmrc.epayeapi.models.out.{ApiError, EmpRefsResponse}
+import uk.gov.hmrc.play.http.{HeaderCarrier, HttpResponse}
+import uk.gov.hmrc.play.http.ws.WSHttp
+import unit.AppSpec
+import unit.auth.AuthComponents.{AuthFail, AuthOk}
+
+import scala.concurrent.Future
+import scala.concurrent.Future.successful
+
+class MonthlyStatementSpec extends AppSpec with BeforeAndAfterEach {
+  val ton = EnrolmentIdentifier("TaxOfficeNumber", "001")
+  val tor = EnrolmentIdentifier("TaxOfficeReference", "AB00001")
+  val empRef = EmpRef(ton.value, tor.value)
+
+  implicit val hc = HeaderCarrier()
+  val http = mock[WSHttp]
+  val app =
+    builder
+      .update { _.overrides(bind(classOf[WSHttp]).toInstance(http)) }
+
+  val inactiveEnrolment = AuthOk(activeEnrolment.data.copy(state = "inactive"))
+  val differentEnrolment = AuthOk(Enrolment("IR-Else", Seq(ton, tor), "activated", ConfidenceLevel.L300))
+  val activeEnrolment = AuthOk(Enrolment("IR-PAYE", Seq(ton, tor), "activated", ConfidenceLevel.L300))
+
+  def config(implicit a: Application): EpayeApiConfig =
+    inject[EpayeApiConfig]
+
+  val taxYear = TaxYear(2015)
+  val taxMonth = TaxMonth(3)
+  def request(implicit a: Application): Future[Result] =
+    inject[GetMonthlyStatementController].getStatement(empRef, taxYear, taxMonth)(FakeRequest())
+
+  override protected def beforeEach(): FixtureParam = {
+    reset(http)
+  }
+
+  "The MonthlyStatement endpoint" should {
+    "return 403 Forbidden on inactive enrolments" in new App(app.withAuth(inactiveEnrolment).build) {
+      status(request) shouldBe FORBIDDEN
+    }
+    "return 403 Forbidden with different enrolments" in new App(app.withAuth(differentEnrolment).build) {
+      status(request) shouldBe FORBIDDEN
+    }
+    "return 404 NotFound when the statements are not found" in new App(app.withAuth(activeEnrolment).build) {
+      status(request) shouldBe NOT_FOUND
+    }
+  }
+
+  //  "The summary endpoint" should {
+  //    "return 200 OK on active enrolments" in new App(app.withAuth(activeEnrolment).build) {
+  //      val firstUrl =  s"${config.baseUrl}" +
+  //        s"/epaye" +
+  //        s"/${empRef.encodedValue}" +
+  //        s"/api/v1/annual-statement"
+  //
+  //      when(http.GET[HttpResponse](Matchers.eq(firstUrl))(anyObject(), anyObject())).thenReturn {
+  //        successful {
+  //          HttpResponse(OK, responseString = Some(
+  //            """
+  //              |{
+  //              |  "rti": {
+  //              |    "totals": {
+  //              |      "balance": {
+  //              |        "debit": 100,
+  //              |        "credit": 0
+  //              |      }
+  //              |    }
+  //              |  },
+  //              |  "nonRti": {
+  //              |    "totals": {
+  //              |      "balance": {
+  //              |        "debit": 23,
+  //              |        "credit": 0
+  //              |      }
+  //              |    }
+  //              |  }
+  //              |}
+  //            """.stripMargin
+  //          ))
+  //        }
+  //      }
+  //
+  //      contentAsString(request) shouldBe Json.parse(
+  //        """
+  //          |{
+  //          |  "outstandingCharges": {
+  //          |    "amount": 123,
+  //          |    "breakdown": {
+  //          |      "rti": 100,
+  //          |      "nonRti": 23
+  //          |    }
+  //          |  },
+  //          |  "_links" : {
+  //          |    "empRefs": {
+  //          |      "href": "/organisations/paye/"
+  //          |    },
+  //          |    "self": {
+  //          |      "href": "/organisations/paye/001/AB00001/"
+  //          |    }
+  //          |  }
+  //          |}
+  //        """.stripMargin).toString()
+  //      status(request) shouldBe OK
+  //    }
+  //
+  //    "return 403 Forbidden on inactive enrolments" in new App(app.withAuth(inactiveEnrolment).build) {
+  //      status(request) shouldBe FORBIDDEN
+  //    }
+  //    "return 403 Forbidden with different enrolments" in new App(app.withAuth(differentEnrolment).build) {
+  //      status(request) shouldBe FORBIDDEN
+  //    }
+  //  }
+}

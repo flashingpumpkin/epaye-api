@@ -2,33 +2,52 @@
   "description": "Wrapper object for individual EmpRefs.",
   "type": "object",
   "properties": {
-    "empRefs": {
-      "type": "array",
-      "items": {
-        "description": "An array of objects which you can use to access further data.",
-        "type": "object",
-        "properties": {
-          "empRef": {
-            "$ref": "Definitions.schema.json#/definitions/empRef"
-          },
-          "_links": {
+    "_embedded": {
+      "type": "object",
+      "properties": {
+        "empRefs": {
+          "type": "array",
+          "items": {
+            "description": "An array of objects which you can use to access further data.",
             "type": "object",
             "properties": {
-              "summary": {
-                "description": "Link to account summary endpoint.",
-                "$ref": "Definitions.schema.json#/definitions/link"
+              "taxOfficeNumber": {
+                "$ref": "Definitions.schema.json#/definitions/taxOfficeNumber"
+              },
+              "taxOfficeReference": {
+                "$ref": "Definitions.schema.json#/definitions/taxOfficeReference"
+              },
+              "_links": {
+                "type": "object",
+                "properties": {
+                  "self": {
+                    "$ref": "Definitions.schema.json#/definitions/link"
+                  },
+                  "statements": {
+                    "$ref": "Definitions.schema.json#/definitions/link"
+                  },
+                  "currentStatement": {
+                    "$ref": "Definitions.schema.json#/definitions/link"
+                  }
+                },
+                "required": [
+                  "self",
+                  "statements",
+                  "currentStatement"
+                ]
               }
             },
             "required": [
-              "summary"
+              "taxOfficeNumber",
+              "taxOfficeReference",
+              "_links"
             ]
           }
-        },
-        "required": [
-          "empRef",
-          "_links"
-        ]
-      }
+        }
+      },
+      "required": [
+        "empRefs"
+      ]
     },
     "_links": {
       "type": "object",
@@ -43,7 +62,7 @@
     }
   },
   "required": [
-    "empRefs",
+    "_embedded",
     "_links"
   ]
 }

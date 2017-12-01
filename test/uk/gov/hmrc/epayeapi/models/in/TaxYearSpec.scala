@@ -17,7 +17,7 @@
 package uk.gov.hmrc.epayeapi.models.in
 
 import org.scalatest.{Matchers, WordSpec}
-import TaxYear.extractTaxYear
+import uk.gov.hmrc.epayeapi.models.TaxYear
 
 class TaxYearSpec extends WordSpec with Matchers {
   "Extract tax year" should {

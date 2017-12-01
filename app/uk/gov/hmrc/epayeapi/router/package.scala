@@ -14,19 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.epayeapi.models.out
+package uk.gov.hmrc.epayeapi
 
-import uk.gov.hmrc.domain.EmpRef
-import uk.gov.hmrc.play.test.UnitSpec
+import uk.gov.hmrc.epayeapi.models.{TaxMonth, TaxYear}
+import uk.gov.hmrc.play.binders.SimpleObjectBinder
 
-class LinkSpecs extends UnitSpec {
-  "Links" should {
-    "generate the right root link" in {
-      Link.empRefsLink() shouldEqual Link("/organisations/paye/")
-    }
-
-    "generate the summary link" in {
-      Link.summaryLink(EmpRef("123", "1231231")) shouldEqual Link("/organisations/paye/123/1231231/")
-    }
-  }
+package object router {
+  implicit object TaxYearBinder extends SimpleObjectBinder[TaxYear](TaxYear.fromUrlEncodedValue, TaxYear.toUrlEncodedValue)
+  implicit object TaxMonthBinder extends SimpleObjectBinder[TaxMonth](TaxMonth.fromUrlEncodedValue, TaxMonth.toUrlEncodedValue)
 }

@@ -18,8 +18,9 @@ package uk.gov.hmrc.epayeapi.models.in
 
 import play.api.libs.json.Json.format
 import play.api.libs.json._
+import uk.gov.hmrc.epayeapi.models.{CommonFormats, TaxMonth, TaxYear}
 
-trait Formats {
+trait Formats extends CommonFormats {
   implicit lazy val taxYearFormat: Format[TaxYear] = format[TaxYear]
   implicit lazy val debitAndCreditFormat: Format[DebitAndCredit] = format[DebitAndCredit]
   implicit lazy val clearedFormat: Format[Cleared] = format[Cleared]
@@ -32,6 +33,17 @@ trait Formats {
   implicit lazy val epayeTotals: Format[EpayeTotals] = format[EpayeTotals]
   implicit lazy val epayeTotalsItems: Format[EpayeTotalsItem] = format[EpayeTotalsItem]
   implicit lazy val epayeTotalsResponse: Format[EpayeTotalsResponse] = format[EpayeTotalsResponse]
+
+  implicit lazy val monthlyStatementJsonFormat: Format[MonthlyStatementJson] = format[MonthlyStatementJson]
+
+  implicit lazy val monthlyChargesJsonFormat: Format[MonthlyChargesJson] = format[MonthlyChargesJson]
+  implicit lazy val monthlyCreditsJsonFormat: Format[MonthlyCreditsJson] = format[MonthlyCreditsJson]
+  implicit lazy val monthlyChargesDetailsJsonFormat: Format[MonthlyChargesDetailsJson] = format[MonthlyChargesDetailsJson]
+  implicit lazy val monthlyStatementItemJsonFormat: Format[MonthlyStatementItemJson] = format[MonthlyStatementItemJson]
+  implicit lazy val codeFormat: Format[Code] = format[Code]
+  implicit lazy val monthlyPaymentDetailsJsonFormat: Format[MonthlyPaymentDetailsJson] = format[MonthlyPaymentDetailsJson]
+  implicit lazy val monthlyPaymentItemJsonFormat: Format[MonthlyPaymentItemJson] = format[MonthlyPaymentItemJson]
+  implicit lazy val monthlyBalanceJsonFormat: Format[MonthlyBalanceJson] = format[MonthlyBalanceJson]
 }
 
 object Formats extends Formats

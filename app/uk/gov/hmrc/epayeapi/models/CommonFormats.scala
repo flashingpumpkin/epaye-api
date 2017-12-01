@@ -14,19 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.epayeapi.models.out
+package uk.gov.hmrc.epayeapi.models
 
-import uk.gov.hmrc.domain.EmpRef
-import uk.gov.hmrc.play.test.UnitSpec
+import play.api.libs.json.Format
+import play.api.libs.json.Json.format
 
-class LinkSpecs extends UnitSpec {
-  "Links" should {
-    "generate the right root link" in {
-      Link.empRefsLink() shouldEqual Link("/organisations/paye/")
-    }
-
-    "generate the summary link" in {
-      Link.summaryLink(EmpRef("123", "1231231")) shouldEqual Link("/organisations/paye/123/1231231/")
-    }
-  }
+trait CommonFormats {
+  implicit lazy val taxYearFormat: Format[TaxYear] = format[TaxYear]
+  implicit lazy val taxMonthFormat: Format[TaxMonth] = format[TaxMonth]
 }

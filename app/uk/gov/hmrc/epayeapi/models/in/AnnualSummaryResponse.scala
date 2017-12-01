@@ -17,6 +17,9 @@
 package uk.gov.hmrc.epayeapi.models.in
 
 import org.joda.time.LocalDate
+import uk.gov.hmrc.epayeapi.models.{TaxMonth, TaxYear}
+
+import scala.util.{Success, Try}
 
 case class DebitAndCredit(
   debit: BigDecimal = 0,
@@ -27,15 +30,6 @@ case class Cleared(
   payment: BigDecimal = 0,
   credit: BigDecimal = 0
 )
-
-
-case class TaxMonth(month: Int) {
-  def firstDay(year: TaxYear): LocalDate =
-    year.firstDay.plusMonths(month - 1)
-
-  def lastDay(year: TaxYear): LocalDate =
-    year.firstDay.plusMonths(month).minusDays(1)
-}
 
 case class LineItem(
   taxYear: TaxYear,

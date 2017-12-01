@@ -20,7 +20,8 @@ import javax.inject.{Inject, Singleton}
 
 import uk.gov.hmrc.domain.EmpRef
 import uk.gov.hmrc.epayeapi.models.Formats._
-import uk.gov.hmrc.epayeapi.models.in.{AnnualSummaryResponse, ApiResponse, EpayeTotalsResponse, TaxYear}
+import uk.gov.hmrc.epayeapi.models.{TaxMonth, TaxYear}
+import uk.gov.hmrc.epayeapi.models.in._
 import uk.gov.hmrc.play.http.HeaderCarrier
 import uk.gov.hmrc.play.http.ws.WSHttp
 
@@ -58,6 +59,16 @@ case class EpayeConnector @Inject() (
         .getOrElse("")
 
     get[AnnualSummaryResponse](url, headers)
+  }
+
+  def getMonthlyStatement(empRef: EmpRef, headers: HeaderCarrier, taxYear: TaxYear, taxMonth: TaxMonth): Future[ApiResponse[MonthlyStatementJson]] = {
+    val url =
+      s"${config.baseUrl}" +
+        s"/epaye/${empRef.encodedValue}" +
+        s"/api/v1" +
+        s"/monthly-statement/${taxYear.asString}/${taxMonth.month}"
+
+    get[MonthlyStatementJson](url, headers)
   }
 }
 

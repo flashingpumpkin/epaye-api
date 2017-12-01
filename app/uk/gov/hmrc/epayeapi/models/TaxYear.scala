@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.epayeapi.models.in
+package uk.gov.hmrc.epayeapi.models
 
 import org.joda.time.LocalDate
 import uk.gov.hmrc.time.TaxYearResolver
@@ -44,4 +44,30 @@ object TaxYear {
       case _ => None
     }
   }
+
+  def fromUrlEncodedValue(value: String): TaxYear = {
+    def throwIllegalArgument =
+      throw new IllegalArgumentException("Tax year requires two numbers separated by a hyphen")
+
+    val regex = """20(\d\d)-(\d\d)""".r
+    value match {
+      case regex(first, second) => {
+        val taxYearOpt = for {
+          fromYear <- Try(first.toInt).toOption
+          toYear <- Try(second.toInt).toOption
+          taxYear <- TaxYear.fromInts(2000 + fromYear, 2000 + toYear)
+        } yield taxYear
+        taxYearOpt.getOrElse(throwIllegalArgument)
+      }
+      case _ => throwIllegalArgument
+    }
+  }
+
+  def toUrlEncodedValue(taxYear: TaxYear): String = taxYear.asString
+
+  def fromInts(fromYear: Int, toYear: Int): Option[TaxYear] =
+    if (fromYear + 1 == toYear) Some(TaxYear(fromYear))
+    else None
+
+  //    implicit def toTaxYear(year: Int): TaxYear = TaxYear(year)
 }

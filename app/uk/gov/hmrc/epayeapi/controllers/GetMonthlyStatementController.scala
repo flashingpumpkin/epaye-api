@@ -26,14 +26,15 @@ import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.domain.EmpRef
 import uk.gov.hmrc.epayeapi.connectors.EpayeConnector
 import uk.gov.hmrc.epayeapi.models.Formats._
-import uk.gov.hmrc.epayeapi.models.in.{ApiJsonError, ApiNotFound, ApiResponse, ApiSuccess}
+import uk.gov.hmrc.epayeapi.models.{TaxMonth, TaxYear}
+import uk.gov.hmrc.epayeapi.models.in._
 import uk.gov.hmrc.epayeapi.models.out.ApiError.EmpRefNotFound
-import uk.gov.hmrc.epayeapi.models.out.{ApiError, SummaryResponse}
+import uk.gov.hmrc.epayeapi.models.out.{ApiError, MonthlyStatementResponse}
 
 import scala.concurrent.ExecutionContext
 
 @Singleton
-case class GetSummaryController @Inject() (
+case class GetMonthlyStatementController @Inject() (
   authConnector: AuthConnector,
   epayeConnector: EpayeConnector,
   implicit val ec: ExecutionContext,
@@ -41,21 +42,23 @@ case class GetSummaryController @Inject() (
 )
   extends ApiController {
 
-  def getSummary(empRef: EmpRef): EssentialAction =
+  def getStatement(taxOfficeNumber: String, taxOfficeReference: String, taxYear: TaxYear, taxMonth: TaxMonth): EssentialAction = {
+    val empRef = EmpRef(taxOfficeNumber, taxOfficeReference)
     EmpRefAction(empRef) {
       Action.async { request =>
-        epayeConnector.getTotal(empRef, hc(request)).map {
-          case ApiSuccess(totals) =>
-            Ok(Json.toJson(SummaryResponse(empRef, totals)))
-          case ApiJsonError(err) =>
-            Logger.error(s"Upstream returned invalid json: $err")
-            InternalServerError(Json.toJson(ApiError.InternalServerError))
+        epayeConnector.getMonthlyStatement(empRef, hc(request), taxYear, taxMonth).map {
+          case ApiSuccess(json) =>
+            Ok(Json.toJson(MonthlyStatementResponse(empRef, taxYear, taxMonth, json)))
           case ApiNotFound() =>
             NotFound(Json.toJson(EmpRefNotFound))
+          case ApiJsonError(error) =>
+            Logger.error(s"Upstream returned invalid json: $error")
+            InternalServerError(Json.toJson(ApiError.InternalServerError))
           case error: ApiResponse[_] =>
             Logger.error(s"Error while fetching totals: $error")
             InternalServerError(Json.toJson(ApiError.InternalServerError))
         }
       }
     }
+  }
 }

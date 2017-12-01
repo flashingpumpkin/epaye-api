@@ -19,8 +19,9 @@ package uk.gov.hmrc.epayeapi.models.out
 import play.api.libs.json.Json.format
 import play.api.libs.json._
 import uk.gov.hmrc.domain.EmpRef
+import uk.gov.hmrc.epayeapi.models.CommonFormats
 
-trait Formats {
+trait Formats extends CommonFormats {
   implicit lazy val empRefFormat: Writes[EmpRef] = new Writes[EmpRef] {
     override def writes(o: EmpRef): JsValue = JsString(s"${o.taxOfficeNumber}/${o.taxOfficeReference}")
   }
@@ -35,6 +36,11 @@ trait Formats {
   implicit lazy val totalsLinksFormat: Format[SummaryLinks] = format[SummaryLinks]
   implicit lazy val totalsResponseFormat: Format[SummaryResponse] = format[SummaryResponse]
   implicit lazy val apiErrorFormat: Format[ApiError] = format[ApiError]
+  implicit lazy val monthlyStatementResponseFormat: Format[MonthlyStatementResponse] = format[MonthlyStatementResponse]
+  implicit lazy val chargeFormat: Format[Charge] = format[Charge]
+  implicit lazy val paymentFormat: Format[Payment] = format[Payment]
+  implicit lazy val monthlySummaryFormat: Format[MonthlySummary] = format[MonthlySummary]
+  implicit lazy val monthlyStatementLinksFormat: Format[MonthlyStatementLinks] = format[MonthlyStatementLinks]
 }
 
 object Formats extends Formats

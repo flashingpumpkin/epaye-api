@@ -3,7 +3,7 @@
     "date": {
       "description": "A date representation with format YYYY-MM-DD",
       "type": "string",
-      "pattern": "^(((19|20)([2468][048]|[13579][26]|0[48])|2000)[-]02[-]29|((19|20)[0-9]{2}[-](0[469]|11)[-](0[1-9]|[11][0-9]|30)|(19|20)[0-9]{2}[-](0[13578]|1[02])[-](0[1-9]|[12][0-9]|3[01])|(19|20)[0-9]{2}[-]02[-](0[1-9]|1[0-9]|2[0-8])))$",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
       "example": "2017-05-05"
     },
     "taxYear": {
@@ -14,7 +14,7 @@
         "year": {
           "description": "The tax year",
           "type": "string",
-          "pattern": "^\\d{4}-\\d{2}"
+          "pattern": "^\\d{4}-\\d{2}$"
         },
         "firstDay": {
           "description": "The first day of the tax year",
@@ -24,18 +24,24 @@
           "description": "The last day of the tax year",
           "$ref": "#/definitions/date"
         }
-      }
+      },
+      "required": [
+        "year",
+        "firstDay",
+        "lastDay"
+      ]
     },
     "taxMonth": {
       "description": "Tax month",
       "type": "object",
       "title": "The tax month for this data",
       "properties": {
-        "number": {
+        "month": {
           "description": "The tax month's number",
           "type": "integer",
           "minimum": 1,
-          "maximum": 12
+          "maximum": 12,
+          "multipleOf": 1
         },
         "firstDay": {
           "description": "The first day of the tax month",
@@ -45,7 +51,12 @@
           "description": "The last day of the tax month",
           "$ref": "#/definitions/date"
         }
-      }
+      },
+      "required": [
+        "month",
+        "firstDay",
+        "lastDay"
+      ]
     },
     "link": {
       "description": "Link to a given endpoint.",
@@ -60,20 +71,38 @@
         "href"
       ]
     },
+    "taxOfficeNumber": {
+      "description": "A tax office number.",
+      "type": "string",
+      "pattern": "^\\w{3}$"
+    },
+    "taxOfficeReference": {
+      "description": "A tax office reference.",
+      "type": "string",
+      "pattern": "^\\w{7,10}$"
+    },
     "empRef": {
       "description": "A unique identifier made up of tax office number and tax office reference.",
-      "type": "string",
-      "pattern": "^\\w{3}/\\w{7,10}"
+      "type": "object",
+      "properties": {
+        "taxOfficeNumber": {
+          "$ref": "#/definitions/taxOfficeNumber"
+        },
+        "taxOfficeReference": {
+          "$ref": "#/definitions/taxOfficeReference"
+        }
+      }
     },
-    "charge_code": {
+    "chargeCode": {
       "description": "The unique identifier for this charge",
       "type": "string",
       "enum": [
+        "INTEREST",
         "NON_RTI_APPRENTICESHIP_LEVY_INTEREST",
+        "NON_RTI_CISR_IN_YEAR_INTEREST",
         "NON_RTI_CIS_FIXED_PENALTY",
         "NON_RTI_CIS_LATE_FILING_INTEREST",
         "NON_RTI_CIS_TAX_GEARED_PENALTY",
-        "NON_RTI_CISR_IN_YEAR_INTEREST",
         "NON_RTI_EI_INCOMPLETE_REPORT_DAILY_PENALTY",
         "NON_RTI_EI_INCOMPLETE_REPORT_DAILY_PENALTY_INTEREST",
         "NON_RTI_EI_INCOMPLETE_REPORT_PENALTY",
@@ -95,10 +124,10 @@
         "NON_RTI_EOY_EMPLOYEE_NIC1_INTEREST",
         "NON_RTI_EOY_EMPLOYER_NIC1",
         "NON_RTI_EOY_EMPLOYER_NIC1_INTEREST",
-        "NON_RTI_EOY_NI_COMPENSATION_ON_STATUTORY_ADOPTION_PAY",
-        "NON_RTI_EOY_NI_HOLIDAY",
         "NON_RTI_EOY_NIC1",
         "NON_RTI_EOY_NIC1_INTEREST",
+        "NON_RTI_EOY_NI_COMPENSATION_ON_STATUTORY_ADOPTION_PAY",
+        "NON_RTI_EOY_NI_HOLIDAY",
         "NON_RTI_EOY_SHARED_PARENT_PAY",
         "NON_RTI_EOY_STATUTORY_ADOPTION_PAY",
         "NON_RTI_EOY_STATUTORY_MATERNITY_PAY",
@@ -149,17 +178,38 @@
         "NON_RTI_SPECIFIED_CHARGE_NIC1",
         "NON_RTI_SPECIFIED_CHARGE_TAX",
         "NON_RTI_STUDENT_LOAN_DEDUCTION_INTEREST",
-        "NON_RTI_TAX_INTEREST"
+        "NON_RTI_TAX_INTEREST",
+        "RTI_CIS_CHARGE_IT",
+        "RTI_CIS_DEDUCTION_SUFFERED",
+        "RTI_EMPLOYMENT_ALLOWANCE_CHARGE",
+        "RTI_IN_YEAR_APPRENTICESHIP_LEVY_CHARGE",
+        "RTI_IN_YEAR_CHARGE_INCOME_TAX",
+        "RTI_IN_YEAR_CHARGE_NIC1",
+        "RTI_IN_YEAR_CHARGE_NIC1_EMPLOYEE_DEDUCTION",
+        "RTI_IN_YEAR_CHARGE_NIC1_EMPLOYER_CONTRIBUTION",
+        "RTI_IN_YEAR_CHARGE_STUDENT_LOAN_DEDUCTION",
+        "RTI_NI_COMPENSATION_SHARED_PARENT_PAY",
+        "RTI_NI_COMPENSATION_STATUTORY_ADOPTION_PAY",
+        "RTI_NI_COMPENSATION_STATUTORY_MATERNITY_PAY",
+        "RTI_NI_COMPENSATION_STATUTORY_PATERNITY_PAY",
+        "RTI_NI_HOLIDAY",
+        "RTI_PAYE_EYU_EMPLOYEE_NIC1",
+        "RTI_PAYE_EYU_EMPLOYER_NIC1",
+        "RTI_PAYE_EYU_STUDENT_LOAN_DEDUCTION",
+        "RTI_PAYE_EYU_TAX",
+        "RTI_SHARED_PARENT_PAY",
+        "RTI_SPECIFIED_CHARGE_EMPLOYEE_NIC1",
+        "RTI_SPECIFIED_CHARGE_EMPLOYER_NIC1",
+        "RTI_SPECIFIED_CHARGE_INCOME_TAX",
+        "RTI_SPECIFIED_CHARGE_NIC1",
+        "RTI_SPECIFIED_CHARGE_STUDENT_LOAN_DEDUCTION",
+        "RTI_SPECIFIED_CISR_CHARGE_IT",
+        "RTI_STATUTORY_ADOPTION_PAY",
+        "RTI_STATUTORY_MATERNITY_PAY",
+        "RTI_STATUTORY_PATERNITY_PAY",
+        "RTI_STATUTORY_SICK_PAY",
+        "UNALLOCATED_CREDIT"
       ]
-    },
-    "dueDate": {
-      "description": "The date this item is due",
-      "$ref": "#/definitions/date"
-    },
-    "is_overdue": {
-      "description": "Whether this item is overdue or not",
-      "type": "boolean",
-      "default": false
     }
   }
 }

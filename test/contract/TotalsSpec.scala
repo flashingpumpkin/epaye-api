@@ -27,7 +27,7 @@ class TotalsSpec extends WiremockSetup with EmpRefGenerator with RestAssertions 
   override implicit lazy val app: Application =
     new GuiceApplicationBuilder().overrides(bind[Router].toProvider[RoutesProvider]).build()
 
-  "/organisation/epaye/{ton}/{tor}/" should {
+  "/organisations/epaye/{ton}/{tor}/" should {
 
     "return 200 OK on active enrolments given no debit" in {
       val empRef = randomEmpRef()
