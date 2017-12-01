@@ -87,6 +87,3 @@ trait ApiController extends BaseController with AuthorisedFunctions {
   }
 }
 
-object ApiController {
-  implicit val empRefPathBinder = new SimpleObjectBinder[EmpRef](EmpRef.fromIdentifiers, _.encodedValue)
-}

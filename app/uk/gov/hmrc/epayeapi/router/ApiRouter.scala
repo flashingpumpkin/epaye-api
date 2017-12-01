@@ -23,6 +23,8 @@ import play.api.routing.{Router, SimpleRouter}
 import play.api.routing.sird._
 import uk.gov.hmrc.domain.EmpRef
 import uk.gov.hmrc.epayeapi.controllers.GetSummaryController
+import uk.gov.hmrc.epayeapi.models.{TaxMonth, TaxYear}
+import uk.gov.hmrc.play.binders.SimpleObjectBinder
 
 @Singleton
 case class ApiRouter @Inject() (
@@ -36,4 +38,10 @@ case class ApiRouter @Inject() (
   }
 
   val routes: Routes = appRoutes.routes.orElse(prodRoutes.routes)
+}
+
+object ApiRouter {
+  implicit object EmpRefBinder extends SimpleObjectBinder[EmpRef](EmpRef.fromIdentifiers, _.encodedValue)
+  implicit object TaxYearBinder extends SimpleObjectBinder[TaxYear](TaxYear.fromUrlEncodedValue, TaxYear.toUrlEncodedValue)
+  implicit object TaxMonthBinder extends SimpleObjectBinder[TaxMonth](TaxMonth.fromUrlEncodedValue, TaxMonth.toUrlEncodedValue)
 }

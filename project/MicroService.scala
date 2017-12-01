@@ -32,8 +32,7 @@ trait MicroService {
       libraryDependencies ++= appDependencies,
       retrieveManaged := true,
       evictionWarningOptions in update := EvictionWarningOptions.default.withWarnScalaVersionEviction(false),
-      routesGenerator := StaticRoutesGenerator,
-      routesImport ++= Seq("uk.gov.hmrc.epayeapi.controllers.ApiController._", "uk.gov.hmrc.epayeapi.router._")
+      routesGenerator := StaticRoutesGenerator
     )
     .configs(IntegrationTest)
     .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)

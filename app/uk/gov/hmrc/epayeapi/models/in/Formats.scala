@@ -21,11 +21,9 @@ import play.api.libs.json._
 import uk.gov.hmrc.epayeapi.models.{CommonFormats, TaxMonth, TaxYear}
 
 trait Formats extends CommonFormats {
-  implicit lazy val taxYearFormat: Format[TaxYear] = format[TaxYear]
   implicit lazy val debitAndCreditFormat: Format[DebitAndCredit] = format[DebitAndCredit]
   implicit lazy val clearedFormat: Format[Cleared] = format[Cleared]
   implicit lazy val annualTotalFormat: Format[AnnualTotal] = format[AnnualTotal]
-  implicit lazy val taxMonthFormat: Format[TaxMonth] = format[TaxMonth]
   implicit lazy val lineItemFormat: Format[LineItem] = format[LineItem]
   implicit lazy val annualSummaryFormat: Format[AnnualSummary] = format[AnnualSummary]
   implicit lazy val annualSummaryResponseFormat: Format[AnnualSummaryResponse] = format[AnnualSummaryResponse]

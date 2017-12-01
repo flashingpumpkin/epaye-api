@@ -75,6 +75,11 @@ private object AppDependencies {
 object MicroServiceBuild extends Build with MicroService {
   val appName = "epaye-api"
 
-  override lazy val playSettings: Seq[Setting[_]] = Seq(routesImport += "uk.gov.hmrc.epayeapi.router._")
+  override lazy val playSettings: Seq[Setting[_]] = Seq(
+    routesImport ++= Seq(
+      "uk.gov.hmrc.epayeapi.models._",
+      "uk.gov.hmrc.epayeapi.router.ApiRouter._"
+    )
+  )
   override lazy val appDependencies: Seq[ModuleID] = AppDependencies()
 }

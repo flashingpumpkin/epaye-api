@@ -1,5 +1,5 @@
 # microservice specific routes
 
 GET  /                                                                    @uk.gov.hmrc.epayeapi.controllers.GetEmpRefsController.getEmpRefs()
-GET  /:taxOfficeNumber/:taxOfficeReference/statements/:taxYear/:taxMonth  @uk.gov.hmrc.epayeapi.controllers.GetMonthlyStatementController.getStatement(taxOfficeNumber, taxOfficeReference, taxYear, taxMonth)
+GET  /:taxOfficeNumber/:taxOfficeReference/statements/:taxYear/:taxMonth  @uk.gov.hmrc.epayeapi.controllers.GetMonthlyStatementController.getStatement(taxOfficeNumber, taxOfficeReference, taxYear: TaxYear, taxMonth: TaxMonth)
 
