@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.epayeapi.controllers
 
+import org.scalatest.mockito.MockitoSugar
 import play.api.Application
 import play.api.libs.json.Json
 import play.api.mvc.Result
@@ -30,7 +31,7 @@ import unit.auth.AuthComponents.{AuthFail, AuthOk}
 
 import scala.concurrent.Future
 
-class GetEmpRefsSpec extends AppSpec {
+class GetEmpRefsSpec extends AppSpec with MockitoSugar {
   val ton = EnrolmentIdentifier("TaxOfficeNumber", "840")
   val tor = EnrolmentIdentifier("TaxOfficeReference", "GZ00064")
 
@@ -47,8 +48,15 @@ class GetEmpRefsSpec extends AppSpec {
   def request(implicit a: Application): Future[Result] =
     inject[GetEmpRefsController].getEmpRefs()(FakeRequest())
 
+  trait Setup {
+    val authConnector = mock[AuthConnector]
+
+
+  }
+
   "The EmpRefs endpoint" should {
     "return 200 OK on active enrolments" in new App(build(AuthOk(activeEnrolment))) {
+
       status(request) shouldBe OK
     }
     "return a list of EmpRefs" in new App(build(AuthOk(activeEnrolment))) {

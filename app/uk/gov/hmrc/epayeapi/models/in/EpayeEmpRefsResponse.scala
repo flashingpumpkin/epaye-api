@@ -16,11 +16,6 @@
 
 package uk.gov.hmrc.epayeapi.models.in
 
-import play.api.libs.json.JsError
+import uk.gov.hmrc.domain.EmpRef
 
-sealed trait EpayeResponse[+A]
-case class EpayeSuccess[A](obj: A) extends EpayeResponse[A]
-case class EpayeJsonError[A](error: JsError) extends EpayeResponse[A]
-object EpayeNotFound extends EpayeResponse[Nothing]
-case class EpayeError[A](status: Int, body: String) extends EpayeResponse[A]
-case class EpayeException[A](message: String) extends EpayeResponse[A]
+case class EpayeEmpRefsResponse(empRefs: Seq[EmpRef])

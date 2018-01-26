@@ -20,7 +20,7 @@ import uk.gov.hmrc.auth.core.{AuthorisationException, Enrolment, Enrolments}
 import uk.gov.hmrc.epayeapi.connectors.stub.FakeAuthConnector
 
 object AuthComponents {
-  case class AuthOk(data: Enrolment) extends FakeAuthConnector {
+  case class AuthOk(data: Enrolment) extends FakeAuthConnector[Enrolments] {
     override val success = Enrolments(Set(data))
   }
   case class AuthFail(pureException: AuthorisationException) extends FakeAuthConnector {

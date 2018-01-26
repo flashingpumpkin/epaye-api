@@ -19,9 +19,18 @@ package uk.gov.hmrc.epayeapi.models.out
 case class ApiErrorJson(code: String, message: String)
 
 object ApiErrorJson {
+
+  def GenericAuthorizationError(message: String): ApiErrorJson =
+    ApiErrorJson("AUTHORIZATION_ERROR", message)
+
   object AuthorizationHeaderInvalid extends ApiErrorJson(
     "AUTHORIZATION_HEADER_INVALID",
-    "You must provide a valid Bearer token in your header"
+    "You must provide a valid token in your header"
+  )
+
+  object TokenExpired extends ApiErrorJson(
+    "TOKEN_EXPIRED",
+    "You must provide a valid authorization token in your header"
   )
 
   object InsufficientEnrolments extends ApiErrorJson(
@@ -42,5 +51,10 @@ object ApiErrorJson {
   object InternalServerError extends ApiErrorJson(
     "INTERNAL_SERVER_ERROR",
     "We are currently experiencing problems. Please try again later."
+  )
+
+  object GatewayError extends ApiErrorJson(
+    "GATEWAY_ERROR",
+    "We are currently experiencing problems with upsteam responses. Please try again later."
   )
 }

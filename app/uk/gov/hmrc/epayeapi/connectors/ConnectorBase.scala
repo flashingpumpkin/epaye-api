@@ -40,7 +40,7 @@ trait ConnectorBase {
       case ex: HttpException =>
         ex.responseCode match {
           case Status.NOT_FOUND =>
-            EpayeNotFound()
+            EpayeNotFound
           case statusCode: Int if statusCode < 500 =>
             EpayeError(statusCode, ex.message)
           case statusCode: Int =>
@@ -64,9 +64,11 @@ trait ConnectorBase {
               case err: JsError => EpayeJsonError(err)
             }
           case Status.NOT_FOUND =>
-            EpayeNotFound()
-          case _ =>
+            EpayeNotFound
+          case statusCode: Int if statusCode < 500 =>
             EpayeError(response.status, response.body)
+          case statusCode: Int =>
+            EpayeException(response.body)
         }
       }
     }

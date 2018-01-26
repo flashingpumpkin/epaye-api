@@ -20,10 +20,11 @@ import javax.inject.{Inject, Singleton}
 
 import akka.stream.Materializer
 import play.api.libs.json.Json
-import play.api.mvc.{Action, EssentialAction}
+import play.api.mvc.{Action, EssentialAction, Result}
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.epayeapi.connectors.EpayeApiConfig
+import uk.gov.hmrc.epayeapi.connectors.{EpayeApiConfig, EpayeConnector}
 import uk.gov.hmrc.epayeapi.models.Formats._
+import uk.gov.hmrc.epayeapi.models.in.{EpayeEmpRefsResponse, EpayeResponse, EpayeSuccess}
 import uk.gov.hmrc.epayeapi.models.out.EmpRefsJson
 
 import scala.concurrent.ExecutionContext
@@ -32,14 +33,25 @@ import scala.concurrent.ExecutionContext
 case class GetEmpRefsController @Inject() (
   config: EpayeApiConfig,
   authConnector: AuthConnector,
+  epayeConnector: EpayeConnector,
   implicit val ec: ExecutionContext,
   implicit val mat: Materializer
 )
   extends ApiController {
 
-  def getEmpRefs(): EssentialAction = EmpRefsAction { empRefs =>
-    Action { request =>
-      Ok(Json.toJson(EmpRefsJson.fromSeq(config.apiBaseUrl, empRefs.toSeq)))
+  def getEmpRefs(): EssentialAction = AuthorisedAction(epayeEnrolment) {
+    Action.async { implicit request =>
+      val empRefs = epayeConnector.getEmpRefs(hc)
+
+      empRefs.map {
+        successHandler orElse errorHandler
+      }
     }
+  }
+
+  def successHandler: PartialFunction[EpayeResponse[EpayeEmpRefsResponse], Result] = {
+    case EpayeSuccess(EpayeEmpRefsResponse(empRefs)) =>
+      val empRefsJson = EmpRefsJson.fromSeq(config.apiBaseUrl, empRefs)
+      Ok(Json.toJson(empRefsJson))
   }
 }
