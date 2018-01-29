@@ -20,14 +20,14 @@ private object AppDependencies {
   val compile = Seq(
     ws,
     "com.codahale.metrics" % "metrics-graphite" % metricsGraphiteVersion,
-    "uk.gov.hmrc" %% "domain" % domainVersion withSources(),
-    "uk.gov.hmrc" %% "logback-json-logger" % logbackJsonLoggerVersion withSources(),
-    "uk.gov.hmrc" %% "microservice-bootstrap" % microserviceBootstrapVersion withSources(),
-    "uk.gov.hmrc" %% "auth-client" % authClientVersion withSources(),
-    "uk.gov.hmrc" %% "play-config" % playConfigVersion withSources(),
-    "uk.gov.hmrc" %% "play-health" % playHealthVersion withSources(),
-    "uk.gov.hmrc" %% "play-hmrc-api" % apiPlatformlibVersion withSources(),
-    "uk.gov.hmrc" %% "play-url-binders" % playUrlBindersVersion withSources()
+    "uk.gov.hmrc" %% "domain" % domainVersion,
+    "uk.gov.hmrc" %% "logback-json-logger" % logbackJsonLoggerVersion,
+    "uk.gov.hmrc" %% "microservice-bootstrap" % microserviceBootstrapVersion,
+    "uk.gov.hmrc" %% "auth-client" % authClientVersion,
+    "uk.gov.hmrc" %% "play-config" % playConfigVersion,
+    "uk.gov.hmrc" %% "play-health" % playHealthVersion,
+    "uk.gov.hmrc" %% "play-hmrc-api" % apiPlatformlibVersion,
+    "uk.gov.hmrc" %% "play-url-binders" % playUrlBindersVersion
   )
 
   object Test {

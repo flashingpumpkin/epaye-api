@@ -24,20 +24,41 @@ import org.scalatest.mockito.MockitoSugar
 import play.api.http.Status
 import play.api.libs.json.Json
 import uk.gov.hmrc.domain.EmpRef
+
 import uk.gov.hmrc.epayeapi.config.WSHttp
 import uk.gov.hmrc.epayeapi.models.in._
+import uk.gov.hmrc.epayeapi.models.Formats._
 import uk.gov.hmrc.epayeapi.models.{JsonFixtures, TaxYear}
 import uk.gov.hmrc.http.{BadGatewayException, HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.test.UnitSpec
 
-import scala.collection.immutable
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future.{failed, successful}
+import scala.concurrent.Future.{successful, failed}
 import scala.concurrent.duration._
-import uk.gov.hmrc.epayeapi.models.Formats._
+
 
 class EpayeConnectorSpec extends UnitSpec with MockitoSugar with ScalaFutures {
+
+  trait Setup {
+    implicit val hc = HeaderCarrier()
+    val http = mock[WSHttp]
+    val config = EpayeApiConfig("https://EPAYE", "http://localhost")
+    val connector = EpayeConnector(config, http, global)
+    val empRef = EmpRefGenerator.getEmpRef
+    val urlEmpRefs = s"${config.epayeBaseUrl}/epaye/self/api/v1/emprefs"
+    val urlTotals = s"${config.epayeBaseUrl}/epaye/${empRef.encodedValue}/api/v1/annual-statement"
+    val urlTotalsByType = s"${config.epayeBaseUrl}/epaye/${empRef.encodedValue}/api/v1/totals/by-type"
+    def urlAnnualStatement(taxYear: TaxYear): String =
+      s"${config.epayeBaseUrl}/epaye/${empRef.encodedValue}/api/v1/annual-statement/${taxYear.asString}"
+
+    def getRandomEmpRefs(num: Int): Seq[EmpRef] =
+      for (_ <- 0 to num) yield EmpRefGenerator.getEmpRef
+
+    def getEmpRefsResponse(empRefs: Seq[EmpRef]): String =
+      Json.prettyPrint(Json.toJson(EpayeEmpRefsResponse(empRefs)))
+  }
+
   "EpayeConnector.getEmpRefs" should {
     "return all empRefs a customer has access to" in new Setup {
       val empRefs = getRandomEmpRefs(10)
@@ -98,7 +119,7 @@ class EpayeConnectorSpec extends UnitSpec with MockitoSugar with ScalaFutures {
         }
       }
 
-      await(connector.getTotal(empRef, hc)) shouldBe
+      Await.result(connector.getTotal(empRef, hc), 2.seconds) shouldBe
         EpayeSuccess(
           EpayeTotalsResponse(
             EpayeTotalsItem(EpayeTotals(100)),
@@ -116,7 +137,7 @@ class EpayeConnectorSpec extends UnitSpec with MockitoSugar with ScalaFutures {
         }
       }
 
-      await(connector.getAnnualStatement(empRef, taxYear, hc)) shouldBe
+      connector.getAnnualStatement(empRef, taxYear, hc).futureValue shouldBe
         EpayeSuccess(
           EpayeAnnualStatement(
             rti = AnnualStatementTable(
@@ -170,26 +191,6 @@ class EpayeConnectorSpec extends UnitSpec with MockitoSugar with ScalaFutures {
             unallocated = None
           )
         )
-    }
-  }
-
-  trait Setup {
-    implicit val hc = HeaderCarrier()
-    val http = mock[WSHttp]
-    val config = EpayeApiConfig("https://EPAYE", "http://localhost")
-    val connector = EpayeConnector(config, http, global)
-    val empRef = EmpRefGenerator.getEmpRef
-    val urlEmpRefs = s"${config.epayeBaseUrl}/epaye/self/api/v1/emprefs"
-    val urlTotals = s"${config.epayeBaseUrl}/epaye/${empRef.encodedValue}/api/v1/annual-statement"
-    val urlTotalsByType = s"${config.epayeBaseUrl}/epaye/${empRef.encodedValue}/api/v1/totals/by-type"
-    def urlAnnualStatement(taxYear: TaxYear): String =
-      s"${config.epayeBaseUrl}/epaye/${empRef.encodedValue}/api/v1/annual-statement/${taxYear.asString}"
-
-    def getRandomEmpRefs(num: Int): immutable.IndexedSeq[EmpRef] =
-      for (_ <- 0 to num) yield EmpRefGenerator.getEmpRef
-
-    def getEmpRefsResponse(empRefs: Seq[EmpRef]): String = {
-      Json.prettyPrint(Json.toJson(EpayeEmpRefsResponse(empRefs)))
     }
   }
 }

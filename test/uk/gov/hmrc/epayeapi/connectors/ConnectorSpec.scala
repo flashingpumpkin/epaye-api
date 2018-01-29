@@ -80,7 +80,7 @@ class ConnectorSpec extends UnitSpec with MockitoSugar with ScalaFutures {
           }
         }
 
-      connector.getData.futureValue shouldEqual EpayeNotFound
+      connector.getData.futureValue shouldEqual EpayeNotFound[TestData]()
     }
 
     "return ApiNotFound on 404 exceptions" in new Setup {
@@ -91,7 +91,7 @@ class ConnectorSpec extends UnitSpec with MockitoSugar with ScalaFutures {
           }
         }
 
-      connector.getData.futureValue shouldEqual EpayeNotFound
+      connector.getData.futureValue shouldEqual EpayeNotFound[TestData]()
     }
     "return ApiError on unexpected responses with status < 500" in new Setup {
       when(connector.http.GET(url))

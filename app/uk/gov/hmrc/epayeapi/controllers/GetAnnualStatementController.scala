@@ -19,15 +19,17 @@ package uk.gov.hmrc.epayeapi.controllers
 import javax.inject.{Inject, Singleton}
 
 import akka.stream.Materializer
+import play.api.Logger
 import play.api.libs.json.Json
-import play.api.mvc.{Action, EssentialAction, Result}
+import play.api.mvc.{Action, EssentialAction}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.domain.EmpRef
 import uk.gov.hmrc.epayeapi.connectors.{EpayeApiConfig, EpayeConnector}
 import uk.gov.hmrc.epayeapi.models.Formats._
 import uk.gov.hmrc.epayeapi.models.TaxYear
 import uk.gov.hmrc.epayeapi.models.in._
-import uk.gov.hmrc.epayeapi.models.out.AnnualStatementJson
+import uk.gov.hmrc.epayeapi.models.out.ApiErrorJson.EmpRefNotFound
+import uk.gov.hmrc.epayeapi.models.out.{AnnualStatementJson, ApiErrorJson}
 
 import scala.concurrent.ExecutionContext
 
@@ -42,23 +44,20 @@ case class GetAnnualStatementController @Inject() (
   extends ApiController {
 
   def getAnnualStatement(empRef: EmpRef, taxYear: TaxYear): EssentialAction =
-    AuthorisedEmpRefAction(empRef) {
+    EmpRefAction(empRef) {
       Action.async { request =>
-        val statement = epayeConnector.getAnnualStatement(
-          empRef, taxYear, hc(request)
-        )
-
-        statement.map {
-          successHandler(empRef, taxYear) orElse errorHandler
+        epayeConnector.getAnnualStatement(empRef, taxYear, hc(request)).map {
+          case EpayeSuccess(epayeAnnualStatement) =>
+            Ok(Json.toJson(AnnualStatementJson(config.apiBaseUrl, empRef, taxYear, epayeAnnualStatement)))
+          case EpayeJsonError(err) =>
+            Logger.error(s"Upstream returned invalid json: $err")
+            InternalServerError(Json.toJson(ApiErrorJson.InternalServerError))
+          case EpayeNotFound() =>
+            NotFound(Json.toJson(EmpRefNotFound))
+          case error: EpayeResponse[_] =>
+            Logger.error(s"Error while fetching totals: $error")
+            InternalServerError(Json.toJson(ApiErrorJson.InternalServerError))
         }
       }
     }
-
-  def successHandler(empRef: EmpRef, taxYear: TaxYear): PartialFunction[EpayeResponse[EpayeAnnualStatement], Result] = {
-    case EpayeSuccess(epayeAnnualStatement) =>
-      val statementJson = AnnualStatementJson(
-        config.apiBaseUrl, empRef, taxYear, epayeAnnualStatement
-      )
-      Ok(Json.toJson(statementJson))
-  }
 }

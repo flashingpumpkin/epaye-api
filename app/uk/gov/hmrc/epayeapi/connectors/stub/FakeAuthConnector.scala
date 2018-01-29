@@ -24,7 +24,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 
-trait FakeAuthConnector[T] extends AuthConnector {
+trait FakeAuthConnector extends AuthConnector {
   def success: Any = ()
   def exception: Option[AuthorisationException] = None
   def authorise[A](predicate: Predicate, retrieval: Retrieval[A])(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[A] = {

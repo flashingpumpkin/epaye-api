@@ -17,17 +17,15 @@
 package uk.gov.hmrc.epayeapi.controllers
 
 import akka.stream.Materializer
-import play.api.Logger
 import play.api.libs.json.Json
 import play.api.libs.streams.Accumulator
 import play.api.mvc._
 import uk.gov.hmrc.auth.core._
-import uk.gov.hmrc.auth.core.retrieve.{EmptyRetrieval, Retrievals}
+import uk.gov.hmrc.auth.core.retrieve.{Retrieval, Retrievals}
 import uk.gov.hmrc.domain.EmpRef
 import uk.gov.hmrc.epayeapi.models.Formats._
-import uk.gov.hmrc.epayeapi.models.in._
 import uk.gov.hmrc.epayeapi.models.out.ApiErrorJson
-import uk.gov.hmrc.epayeapi.models.out.ApiErrorJson.{InsufficientEnrolments, _}
+import uk.gov.hmrc.epayeapi.models.out.ApiErrorJson.{AuthorisationError, InsufficientEnrolments, InvalidEmpRef}
 import uk.gov.hmrc.play.binders.SimpleObjectBinder
 import uk.gov.hmrc.play.microservice.controller.BaseController
 
@@ -40,56 +38,73 @@ trait ApiController extends BaseController with AuthorisedFunctions {
   implicit def ec: ExecutionContext
   implicit def mat: Materializer
 
-  def AuthorisedAction(enrolment: Enrolment)(action: => EssentialAction): EssentialAction = {
+  def AuthorisedAction(enrolment: Enrolment)(action: => EssentialAction): EssentialAction =
     EssentialAction { implicit request =>
       Accumulator.done {
-        authorised(enrolment.withDelegatedAuthRule("epaye-auth")).retrieve(EmptyRetrieval) { f =>
+        authorised(enrolment) {
           action(request).run()
-        } recoverWith {
-          case ex: AuthorisationException =>
-            Logger.error("Error authorizing user", ex)
-            genericAuthorisationError(ex.reason)
+        } recover  recoverAuthFailure
+      }
+    }
+
+  def EnrolmentsAction(enrolment: Enrolment, retrieveEnrolments: Retrieval[Enrolments])(action: Enrolments => EssentialAction): EssentialAction = {
+    EssentialAction { implicit request =>
+      Accumulator.done {
+        authorised(enrolment.withDelegatedAuthRule("epaye-auth"))
+          .retrieve(retrieveEnrolments) { enrolments =>
+            action(enrolments)(request).run()
+          } recover recoverAuthFailure
+      }
+    }
+  }
+
+  def EmpRefsAction(action: Set[EmpRef] => EssentialAction): EssentialAction =
+    EnrolmentsAction(epayeEnrolment, epayeRetrieval) { enrolments =>
+      EssentialAction { request =>
+        action(enrolments.enrolments.flatMap(enrolmentToEmpRef))(request)
+      }
+    }
+
+  def EmpRefAction(empRefFromUrl: EmpRef)(action: EssentialAction): EssentialAction = {
+    EmpRefsAction { empRefsFromAuth =>
+      EssentialAction { request =>
+        empRefsFromAuth.find(_ == empRefFromUrl) match {
+          case Some(empRef) => action(request)
+          case None => Accumulator.done(invalidEmpRef)
         }
       }
     }
   }
 
-  def AuthorisedEmpRefAction(empRefFromUrl: EmpRef)(action: EssentialAction): EssentialAction = {
-    val enrolment = epayeEnrolment
-      .withIdentifier("TaxOfficeNumber", empRefFromUrl.taxOfficeNumber)
-      .withIdentifier("TaxOfficeReference", empRefFromUrl.taxOfficeReference)
-
-    AuthorisedAction(enrolment) {
-      EssentialAction { implicit request =>
-        Accumulator.done(action(request).run())
-      }
-    }
+  def recoverAuthFailure: PartialFunction[Throwable, Result] = {
+    case ex: MissingBearerToken => missingBearerToken
+    case ex: InvalidBearerToken => invalidBearerToken
+    case ex: BearerTokenExpired => expiredBearerToken
+    case ex: InsufficientEnrolments => insufficientEnrolments
+    case ex: AuthorisationException => authorisationError
   }
 
-  def authorizationHeaderInvalid: Future[Result] =
-    Future.successful(Unauthorized(Json.toJson(AuthorizationHeaderInvalid)))
-  def insufficientEnrolments: Future[Result] =
-    Future.successful(Forbidden(Json.toJson(InsufficientEnrolments)))
-  def bearerTokenExpired: Future[Result] =
-    Future.successful(Unauthorized(Json.toJson(TokenExpired)))
-  def invalidEmpRef: Future[Result] =
-    Future.successful(Forbidden(Json.toJson(InvalidEmpRef)))
-  def genericAuthorisationError(message: String): Future[Result] =
-    Future.successful(Unauthorized(Json.toJson(GenericAuthorizationError(message))))
 
-  def errorHandler[A]: PartialFunction[EpayeResponse[A], Result] = {
-    case EpayeJsonError(error) =>
-      Logger.error(s"Upstream returned invalid json: $error")
-      InternalServerError(Json.toJson(ApiErrorJson.InternalServerError))
-    case EpayeNotFound =>
-      NotFound(Json.toJson(EmpRefNotFound))
-    case EpayeError(status, body) =>
-      Logger.error(s"Upstream returned an error: status=$status")
-      Logger.debug(s"Upstream error: body=$body")
-      InternalServerError(Json.toJson(ApiErrorJson.InternalServerError))
-    case EpayeException(message) =>
-      Logger.error(s"Upstream threw an exception: $message")
-      InternalServerError(Json.toJson(ApiErrorJson.InternalServerError))
+  def authorisationError: Result =
+    Unauthorized(Json.toJson(ApiErrorJson.AuthorisationError))
+  def invalidBearerToken: Result =
+    Unauthorized(Json.toJson(ApiErrorJson.InvalidBearerToken))
+  def expiredBearerToken: Result =
+    Unauthorized(Json.toJson(ApiErrorJson.ExpiredBearerToken))
+  def missingBearerToken: Result =
+    Unauthorized(Json.toJson(ApiErrorJson.MissingBearerToken))
+  def insufficientEnrolments: Result =
+    Forbidden(Json.toJson(InsufficientEnrolments))
+  def invalidEmpRef: Result =
+    Forbidden(Json.toJson(InvalidEmpRef))
+
+  private def enrolmentToEmpRef(enrolment: Enrolment): Option[EmpRef] = {
+    for {
+      "IR-PAYE" <- Option(enrolment.key)
+      tn <- enrolment.identifiers.find(_.key == "TaxOfficeNumber")
+      tr <- enrolment.identifiers.find(_.key == "TaxOfficeReference")
+      if enrolment.isActivated
+    } yield EmpRef(tn.value, tr.value)
   }
 }
 
